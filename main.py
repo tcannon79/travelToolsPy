@@ -1,3 +1,3 @@
 print("Hello World")
-exampleVariable = 567 + 87.7
+exampleVariable = 567 + 8
 print(exampleVariable)
