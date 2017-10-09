@@ -9,11 +9,10 @@ that you can use as your test set
 
 it should spit out all data about the about the farm from dataset 1 and the travel cities and dates are listed in schedule tab highlight in yellow
 
-Brendan
 How big a deviation from the google expected travel route is acceptable?
 and there is actually a maps link that should show the trips. I would say it should be adjustable but lets go with 10 km and 25 km for testing
 
-Brendan
-Sure
-do you guys have any experience with unit testing?
-or test driven develop
+Datasets are located in the LSL external folder on drive
+
+DO NOT CHECK IN DATASETS
+
