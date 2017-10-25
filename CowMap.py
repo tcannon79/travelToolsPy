@@ -113,7 +113,7 @@ df = df.drop(df1[(df1.deviation > deviation)].index) # Drop all farms that incre
 df = df.set_index('deviation')
 df = df.drop([None]) # Drop malformed data points
 
-Excel = pandas.ExcelWriter('FarmsOnRouteUnder' + deviation//1000 + 'Km.xlsx', engine='xlsxwriter')
+Excel = pandas.ExcelWriter('FarmsOnRouteUnder' + str(deviation//1000) + 'Km.xlsx', engine='xlsxwriter')
 df.to_excel(Excel, sheet_name='Sheet1')
 Excel.save()
 
