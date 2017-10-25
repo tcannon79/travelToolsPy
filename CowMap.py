@@ -1,32 +1,32 @@
 
 # coding: utf-8
 
-# In[1]:
-
 import googlemaps, pandas, json, requests
 
-
-# In[2]:
-
-##Having something like this would be ideal. (for later)
-#origin = input("Where are you starting?")
-#destination = input("Where do you want to finish?")
-#waypoints = input("Where would you like to pass through?")
-#deviation = input("What distance from your current route is acceptable in metres?")
+GOOGLE_MAPS_API_URL = 'http://maps.googleapis.com/maps/api/directions/json'
 
 
-# In[3]:
+origin = input("Where are you starting?")
+destination = input("Where do you want to finish?")
+waypoints = input("Where would you like to pass through?")
+deviation = int(input("What distance from your current route is acceptable in metres?"))
+
+##        params = {
+##            'units' : 'metric',
+##            'origin' : 'Brisbane, Queensland',
+##            'waypoints': "Beaudesert, Queensland 4285|Capella, Queensland 4723|Blackall, Queensland 4472|Roma, Queensland 4455|",
+##            'destination' : 'Brisbane, Queensland',
+##            'optimizeWaypoints' : True,
+##        }
+
+## deviation = 50000
+
 
 data=pandas.read_excel('FarmData.xlsx')
-
-
-# In[4]:
-
 data["Address1"] = data["Address"]+", "+data["City"]+", "+data["State"]
 
 
-# In[9]:
-
+# Look up the coordinates and addresses of desired farms
 latt = []
 longg = []
 addresss = []
@@ -56,26 +56,19 @@ for item in data['Address1']:
         addresss.append(None)
 
 
-# In[18]:
-
 data['lat'] = latt
 data['lng'] = longg
 data['address_formatted'] = addresss
 
 
-# In[786]:
-
-dist_main_ = []
-
-GOOGLE_MAPS_API_URL = 'http://maps.googleapis.com/maps/api/directions/json'
-
 params = {
-    'units' : 'metric',
-    'origin' : 'Brisbane, Queensland',
-    'waypoints': "Beaudesert, Queensland 4285|Capella, Queensland 4723|Blackall, Queensland 4472|Roma, Queensland 4455|",
-    'destination' : 'Brisbane, Queensland',
-    'optimizeWaypoints' : True,
-}
+            'units' : 'metric',
+            'origin' : origin,
+            'waypoints': waypoints,
+            'destination' : destination,
+            'optimizeWaypoints' : True,
+        }
+
 
 # Do the request and get the response data
 req = requests.get(GOOGLE_MAPS_API_URL, params=params)
@@ -85,26 +78,17 @@ dist_main_ = [res['routes'][0]['legs'][i]['distance']['value'] for i in range(le
 dist_main = sum(dist_main_)
 
 
-# In[22]:
+# Now calculate the deviation caused by adding new points
 
 dist_dev_fin = []
 
 for lt, lg in zip(data['lat'], data['lng']):
     if lt != None:
-        GOOGLE_MAPS_API_URL = 'http://maps.googleapis.com/maps/api/directions/json'
-
-        params = {
-            'units' : 'metric',
-            'origin' : 'Brisbane, Queensland',
-            'waypoints': "Beaudesert, Queensland 4285|Capella, Queensland 4723|Blackall, Queensland 4472|Roma, Queensland 4455|"+str(lt)+','+str(lg),
-            'destination' : 'Brisbane, Queensland',
-            'optimizeWaypoints' : True,
-        }
+        params['destination'] = params['destination']+str(lt)+','+str(lg)
 
         # Do the request and get the response data
         req = requests.get(GOOGLE_MAPS_API_URL, params=params)
         res = req.json()
-        dist_dev_ = []
         
         if res['routes'] != []:
             dist_dev_ = [res['routes'][0]['legs'][i]['distance']['value'] for i in range(len(res['routes'][0]['legs']))]           
@@ -117,42 +101,19 @@ for lt, lg in zip(data['lat'], data['lng']):
         else:
             dist_dev_fin.append(None)
     
-         
-    
     else:
-        dist_dev_vin.append(None)
+        dist_dev_fin.append(None)
     
-
-
-# In[24]:
 
 data['deviation'] = dist_dev_fin
 
-
-# In[146]:
-
+# Output results to new Spreadsheet
 df = pandas.DataFrame(columns = list(data.keys()))
-df1 = data
-
-
-# In[169]:
-
-df = df1.drop(df1[(df1.deviation > 50000)].index)
-
-
-# In[170]:
-
+df = df.drop(df1[(df1.deviation > deviation)].index) # Drop all farms that increase the deviation from the path above acceptable parameters
 df = df.set_index('deviation')
+df = df.drop([None]) # Drop malformed data points
 
-
-# In[171]:
-
-df = df.drop([None])
-
-
-# In[168]:
-
-Excel = pandas.ExcelWriter('FarmsOnRouteUnder50Km.xlsx', engine='xlsxwriter')
+Excel = pandas.ExcelWriter('FarmsOnRouteUnder' + deviation//1000 + 'Km.xlsx', engine='xlsxwriter')
 df.to_excel(Excel, sheet_name='Sheet1')
 Excel.save()
 
