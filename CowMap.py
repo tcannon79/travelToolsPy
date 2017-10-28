@@ -1,4 +1,3 @@
-
 # coding: utf-8
 
 import googlemaps, pandas, json, requests
@@ -116,4 +115,3 @@ df = df.drop([None]) # Drop malformed data points
 Excel = pandas.ExcelWriter('FarmsOnRouteUnder' + str(deviation//1000) + 'Km.xlsx', engine='xlsxwriter')
 df.to_excel(Excel, sheet_name='Sheet1')
 Excel.save()
-
